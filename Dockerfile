@@ -26,8 +26,12 @@ EXPOSE 5060/tcp 5060/udp 5080/tcp 5080/udp
 EXPOSE 5066/tcp 7443/tcp
 EXPOSE 8021/tcp
 
-# RTP port range
-EXPOSE 16384-32768/udp
+# RTP port range (we leave uncommented currently, user decides at runtime)
+# EXPOSE 16384-32768/udp
+# see https://www.engagespark.com/blog/rtp-port-ranges-for-freeswitch-in-docker
+# noting issues such as:
+# https://github.com/moby/moby/issues/14288
+# https://github.com/moby/moby/issues/14856
 
 COPY entry.sh /opt/local/bin/entry.sh
 COPY reload.sh /opt/local/bin/reload.sh
