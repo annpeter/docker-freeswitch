@@ -1,5 +1,47 @@
 #!/bin/bash -e
 
+# pre-wipe if user specifies
+if [ "$CONFIG_PREWIPE" = 'true' ]; then
+  echo '> wiping /etc/freeswitch'
+  rm -Rf /etc/freeswitch/*
+fi
+
+# overlay configuration
+if [ ! -z "$CONFIG_OVERLAY_GIT_URI" ]; then
+  echo 'Overlaying custom configuration repository'
+  if [ ! -z "$CONFIG_OVERLAY_GIT_PRIVATE_KEY" ]; then
+    mkdir -p /root/.ssh
+    echo "$CONFIG_OVERLAY_GIT_PRIVATE_KEY" > /root/.ssh/id_rsa
+    chmod 400 /root/.ssh/id_rsa
+  fi
+
+  # Create known_hosts
+  touch /root/.ssh/known_hosts
+
+  # this is not secure, but lets do for common defaults
+  # Add bitbucket's key
+  ssh-keyscan bitbucket.org >> /root/.ssh/known_hosts
+  # Add github's key
+  ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+  # clone the repository or pull if already existing
+  mkdir -p /root/src
+  if [ -e /root/src/fs-custom ]; then
+    echo 'Performing a pull on existing clone'
+    pushd "/root/src/fs-custom"
+      git pull
+    popd
+  else
+    echo 'Performing fresh clone'
+    pushd "/root/src"
+      git clone "$CONFIG_OVERLAY_GIT_URI" fs-custom
+    popd
+  fi
+
+  # currently, we'll only support copying from etc
+  cp -Rvf /root/src/fs-custom/etc/* /etc/
+fi
+
 # Re-configuration
 
 # Default password
@@ -72,42 +114,6 @@ if [ "$EC2" = 'true' ]; then
   # autoload_configs/switch.conf.xml
   sed -i 's%<!-- <param name="rtp-start-port" value="16384"/> -->%<param name="rtp-start-port" value="16384"/>%g' /etc/freeswitch/autoload_configs/switch.conf.xml
   sed -i 's%<!-- <param name="rtp-end-port" value="32768"/> -->%<param name="rtp-end-port" value="32768"/>%g' /etc/freeswitch/autoload_configs/switch.conf.xml
-fi
-
-# overlay configuration
-if [ ! -z "$CONFIG_OVERLAY_GIT_URI" ]; then
-  echo 'Overlaying custom configuration repository'
-  if [ ! -z "$CONFIG_OVERLAY_GIT_PRIVATE_KEY" ]; then
-    mkdir -p /root/.ssh
-    echo "$CONFIG_OVERLAY_GIT_PRIVATE_KEY" > /root/.ssh/id_rsa
-    chmod 400 /root/.ssh/id_rsa
-  fi
-
-  # Create known_hosts
-  touch /root/.ssh/known_hosts
-
-  # this is not secure, but lets do for common defaults
-  # Add bitbucket's key
-  ssh-keyscan bitbucket.org >> /root/.ssh/known_hosts
-  # Add github's key
-  ssh-keyscan github.com >> /root/.ssh/known_hosts
-
-  # clone the repository or pull if already existing
-  mkdir -p /root/src
-  if [ -e /root/src/fs-custom ]; then
-    echo 'Performing a pull on existing clone'
-    pushd "/root/src/fs-custom"
-      git pull
-    popd
-  else
-    echo 'Performing fresh clone'
-    pushd "/root/src"
-      git clone "$CONFIG_OVERLAY_GIT_URI" fs-custom
-    popd
-  fi
-
-  # currently, we'll only support copying from etc
-  cp -Rvf /root/src/fs-custom/etc/* /etc/
 fi
 
 echo executing: "$@"

@@ -22,11 +22,12 @@ Detached:
 
 There should be a reasonable amount of flexibility using the available variables. If not please raise an issue so your use case can be covered!
 
-- `SOFTTIMER_TIMERFD` - Whether to enable or disable timerfd - `true` or `false`, default is `true`
+- `CONFIG_PREWIPE` - wipe `/etc/freeswitch` before reconfiguring in entrypoint
 - `CONFIG_OVERLAY_GIT_URI` - URI for git clone of a custom configuration repo to overlay on top of the default configuration
 - `CONFIG_OVERLAY_GIT_PRIVATE_KEY` - SSH private key for the git repo (if required, private is recommended)
 - `DEFAULT_PASSWORD` - The default password, this should always be set to override the default of `1234`
 - `EC2` - Configure for EC2/VPC usage - `true` or `false`, default is `false`
+- `SOFTTIMER_TIMERFD` - Whether to enable or disable timerfd - `true` or `false`, default is `true`
 
 #### Runtime Management
 
